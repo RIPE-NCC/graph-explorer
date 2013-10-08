@@ -1,11 +1,10 @@
 #!/usr/bin/env python2
 import os
 import sys
-import urllib2
 import logging
 
 import config
-from backend import Backend, MetricsError
+from backend import Backend
 import structured_metrics
 
 os.chdir(os.path.dirname(__file__))
@@ -23,7 +22,7 @@ if config.log_file:
 
 try:
     backend = Backend(config, logger)
-    s_metrics = structured_metrics.StructuredMetrics()
+    s_metrics = structured_metrics.StructuredMetrics(config, logger)
     errors = s_metrics.load_plugins()
     if len(errors) > 0:
         logger.warn('errors encountered while loading plugins:')
@@ -36,4 +35,6 @@ try:
     logger.info("success!")
 except Exception, e:
     logger.error("sorry, something went wrong: %s", e)
+    from traceback import print_exc
+    print_exc()
     sys.exit(2)

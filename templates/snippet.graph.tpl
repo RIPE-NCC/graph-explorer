@@ -1,4 +1,4 @@
-%graph_id = graph_key.replace('.','').replace('-','_').replace(' ','_') # disallowed in var names
+%graph_id = ''.join(e for e in graph_key if e.isalnum())
 <h2 id="h2_{{graph_id}}"></h2>
 %try: import json
 %except ImportError: import simplejson as json
@@ -49,12 +49,15 @@
 		    width: "740",
 		    line_stack_toggle: 'line_stack_form_flot_{{graph_id}}',
 		    series: {stack: true, lines: { show: true, lineWidth: 0, fill: true }},
-		    legend: { container: '#legend_flot_{{graph_id}}', noColumns: 1, labelFormatter: labelFormatter },
+		    legend: {container: '#legend_flot_{{graph_id}}', noColumns: 1, labelFormatter: labelFormatter },
             hover_details: true,
             zoneFileBasePath: '../timeserieswidget/tz',
             tz: "{{preferences.timezone}}",
 		};
 		var graph_flot_{{graph_id}} = $.extend({}, defaults, graph_data);
-	        $("#chart_flot_{{graph_id}}").graphiteFlot(graph_flot_{{graph_id}}, function(err) { console.log(err); });
+		$("#chart_flot_{{graph_id}}").graphiteFlot(graph_flot_{{graph_id}}, function(err) { console.log(err); });
+		//$("#chart_flot_{{graph_id}}").graphiteHighcharts(graph_flot_{{graph_id}}, function(err) { console.log(err); });
+        // TODO: error callback should actually show the errors in the html, something like:
+        // function(err) { $("#chart_flot_{{graph_id}}").append('<span class="label label-important">' + err + '</span>'); }
 	});
         </script>
