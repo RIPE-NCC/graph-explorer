@@ -1,5 +1,5 @@
 count_interval = 60  # counts are in buckets of <size>s seconds; i.e. statsd flushInterval
-timezone = "America/New_York"
+timezone = "UTC"
 
 # match on target properties (before matching) and apply settings accordingly
 # this option doesn't actually work yet
