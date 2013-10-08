@@ -7,12 +7,7 @@ except ImportError:
     except ImportError:
         raise ImportError("GE requires python2, 2.6 or higher, or 2.5 with simplejson.")
 import os
-import re
 import logging
-import pickle
-import md5
-
-import config
 
 
 class MetricsError(Exception):
@@ -25,14 +20,32 @@ class MetricsError(Exception):
 
 
 class Backend(object):
-
     def __init__(self, config, logger=logging):
         self.config = config
         self.logger = logger
 
     def download_metrics_json(self):
         import urllib2
-        response = urllib2.urlopen("%s/metrics/index.json" % self.config.graphite_url)
+        if (self.config.graphite_username is not None and self.config.graphite_password is not None):
+            # set up the graphite url
+            url = self.config.graphite_url + "/metrics/index.json"
+            #user/pass from the config file
+            username = self.config.graphite_username
+            password = self.config.graphite_password
+            # create the password manager
+            passmanager = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            # add the credentials to the password manager
+            passmanager.add_password(None, url, username, password)
+            # add the authentication handler
+            authhandler = urllib2.HTTPBasicAuthHandler(passmanager)
+            opener = urllib2.build_opener(authhandler)
+            # install the authentication handler, all url_open commands will now use it
+            urllib2.install_opener(opener)
+            # finnally get our data
+            response = urllib2.urlopen(url)
+        else:
+            response = urllib2.urlopen("%s/metrics/index.json" % self.config.graphite_url)
+
         m = open('%s.tmp' % self.config.filename_metrics, 'w')
         m.write(response.read())
         m.close()
@@ -53,17 +66,6 @@ class Backend(object):
         except ValueError, e:
             raise MetricsError("Can't parse metrics file", e)
 
-    # yields metrics that match at least one of the specified patterns
-    def yield_metrics(self, match):
-        match_objects = [re.compile(regex) for regex in match]
-        metrics = self.load_metrics()
-        for metric in metrics:
-            for m_o in match_objects:
-                match = m_o.search(metric)
-                if match is not None:
-                    yield metric
-                    break
-
     def stat_metrics(self):
         try:
             return os.stat(self.config.filename_metrics)
@@ -74,14 +76,11 @@ class Backend(object):
         self.logger.debug("loading metrics")
         metrics = self.load_metrics()
 
-        self.logger.debug("updating targets")
-        targets_all = s_metrics.list_targets(metrics)
-        open(config.targets_all_cache_file, 'w').write(pickle.dumps(targets_all))
+        self.logger.debug("removing outdated targets")
+        s_metrics.remove_metrics_not_in(metrics)
 
-    def load_data(self):
-        self.logger.debug("loading targets")
-        targets_all = pickle.loads(open('targets_all.cache').read())
-        return targets_all
+        self.logger.debug("updating targets")
+        s_metrics.update_targets(metrics)
 
 
 def get_action_on_rules_match(rules, subject):

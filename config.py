@@ -5,7 +5,6 @@ anthracite_url = None
 listen_host = '0.0.0.0'  # defaults to "all interfaces"
 listen_port = 8088
 filename_metrics = 'metrics.json'
-targets_all_cache_file = 'targets_all.cache'
 log_file = 'graph-explorer.log'
 es_host = "localhost"
 es_port = 9200

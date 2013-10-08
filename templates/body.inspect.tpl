@@ -1,24 +1,21 @@
   <div class="container-fluid">
 %include templates/snippet.errors errors=errors
      <div class="row">
-        <div class="span12">
           <h2>Targets</h2>
-% for (target_k,target_v) in targets.items():
-            Key:{{target_k}}</br>
-            <table class="table">
-%  for attrib_k in ('graphite_metric', 'target'):
-%  attrib_v = target_v[attrib_k]
-                <tr><td>{{attrib_k}}</td><td>{{attrib_v}}</td></tr>
-%  end
-                <tr><td>tags</td>
-                <td><ul>
-% for (tag_k,tag_v) in target_v["tags"].items():
-    <li>{{tag_k}}:{{tag_v}}</li>
-%end
-                </ul></td></tr>
-            </table>
-%end
+% for metric in metrics:
+        <div class="span12 well">
+        <dl class="dl-horizontal span6">
+            <dt>ID</dt><dd>{{metric['id']}}</dd>
+            <dt>png</dt><dd><a href="{{config.graphite_url}}/render/?target={{metric['id']}}"><i class="icon-picture"></i></a></dd>
+            <dt>tags</dt><dd>
+            <dl class="dl-horizontal span6" style="margin-top: 0px;">
+                % for (tag_k,tag_v) in metric['tags'].items():
+                    <dt>{{tag_k}}</dt><dd>{{tag_v}}</dd>
+                %end
+            </dl>
+        </dd>
+        </dl>
        </div>
+%end
       </div>
     </div> <!-- /container -->
-

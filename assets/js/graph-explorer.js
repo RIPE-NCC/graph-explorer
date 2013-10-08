@@ -61,27 +61,25 @@ function get_vtitle(graph_data) {
     //automatically generate vtitle, if possible
     var vtitle = "";
     var target_type = "";
+    if ('type' in graph_data['constants_all']) {
+        vtitle += display_tag('type', graph_data['constants_all']['type']);
+    }
     if ('target_type' in graph_data['constants_all']) {
         target_type = graph_data['constants_all']['target_type'];
     }
-    if ('what' in graph_data['constants_all']) {
+    if ('unit' in graph_data['constants_all']) {
         if (target_type == 'counter') {
-            vtitle += 'total' + display_tag('what', graph_data['constants_all']['what']);
+            vtitle += 'total' + display_tag('unit', graph_data['constants_all']['unit']);
         } else {
-            vtitle += display_tag('what', graph_data['constants_all']['what']);
+            vtitle += display_tag('unit', graph_data['constants_all']['unit']);
         }
-    }
-    if ('type' in graph_data['constants_all']) {
-        vtitle += display_tag('type', graph_data['constants_all']['type']);
     }
     // gauge_pct etc
     if (endsWith(target_type, '_pct')) {
         vtitle += ' %';
     }
     if (vtitle != "") {
-        if (target_type == 'rate') {
-            vtitle += "/s";
-        } else if (target_type == 'count') {
+        if (target_type == 'count') {
             vtitle += "/" + count_interval;
         }
     }
@@ -94,10 +92,26 @@ function create_colormap(tags) {
 }
 function get_inspect_url(data, name) {
     var q;
-    if($.isArray(data['graphite_metric'])) {
-        q = '^' + data['graphite_metric'].join('$|^') + '$';
+    if($.isArray(data['id'])) {
+        q = data['id'].join(',');
     } else {
-        q = '^' + data['graphite_metric'] + '$';
+        q = data['id'];
     }
     return "<a href='/inspect/" + q +"'>" + name + "</a>";
 }
+
+function update_dash_entry(key) {
+    var entry_input = document.getElementById('query_' + key);
+
+    var entry_fs_link = document.getElementById('link_fullscreen_' + key);
+    entry_fs_link.href = '/index/' + encodeURIComponent(entry_input.value);
+
+    $("#viewport_" + key).load("/graphs_minimal/" + encodeURIComponent(entry_input.value));
+}
+function update_graphs(query, graphs) {
+    var query = $(query)[0].value;
+    $.post('/graphs/', {query:query}, function(data) {
+        $(graphs).html(data);
+    });
+}
+

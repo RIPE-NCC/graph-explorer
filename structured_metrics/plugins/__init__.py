@@ -101,10 +101,9 @@ class Plugin(object):
         tags = match.groupdict()
         tags.update({'target_type': target_config['target_type'], 'plugin': self.classname_to_tag()})
         target = {
+            'id': match.string,  # graphite metric
             'config': target_config,
             'tags': tags,
-            'graphite_metric': match.string,  # keep reference to graphite metric
-            'target': match.string  # most sensible default, can be changed of course..
         }
         return target
 
@@ -128,14 +127,13 @@ class Plugin(object):
     def sanitize(self, target):
         return None
 
-    def find_targets(self, metric):
+    def upgrade_metric(self, metric):
         """
-        For given metrics, yield all possible targets according to our pattern
-        yield a tuple of id (targetstring) and target, being:
+        For given proto1 metric, try to upgrade it to proto2 if we can match it to a config
+        yield a tuple of id and proto2 metric, being:
             {
-                'graphite_metric': '<..>',  # the exact graphite metric name
-                'target': '<..>',  # as instructed by plugin. usually graphite metric name with maybe graphite functions around it
-                'tag': { tag_key: tag_value [,...]}
+                'id': '<..>',  # the exact graphite metric id
+                'tags': { tag_key: tag_value [,...]}
             }
         }
         """
@@ -152,7 +150,7 @@ class Plugin(object):
                     break
             if not yield_metric:
                 continue
-            # any match object that creates a match is a winner, yield it
+            # first match object that creates a match is a winner, yield it
             for match_object in target['match_object']:
                 match = match_object.search(metric)
                 if match is not None:
@@ -162,8 +160,9 @@ class Plugin(object):
                     del target['config']  # not needed beyond this point
                     self.targets_found += 1
                     self.targets[id]['yielded'] += 1
-                    yield (self.get_target_id(target), target)
+                    return (self.get_target_id(target), target)
                     continue
+        return None
 
     def classname_to_tag(self):
         '''
