@@ -1,7 +1,7 @@
 from . import Plugin
 
 
-class RipeDnslugin(Plugin):
+class RipeDnsPlugin(Plugin):
     """Collect metrics for name servers.
 
     Works with diamond's bind collector
